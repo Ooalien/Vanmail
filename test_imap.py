@@ -15,8 +15,8 @@ def test_imap_connection():
         # IMAP server settings
         IMAP_HOST = 'localhost'
         IMAP_PORT = 1143
-        USERNAME = 'omar-floki@allo.malo'  # Replace with a valid user email
-        PASSWORD = 'aliali'      # Replace with the user's password
+        USERNAME = 'user@example.com'  # Replace with a valid user email
+        PASSWORD = 'password'      # Replace with the user's password
 
         # Connect to IMAP server
         logger.info(f"Connecting to IMAP server at {IMAP_HOST}:{IMAP_PORT}")
