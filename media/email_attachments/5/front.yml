@@ -1,0 +1,199 @@
+version: '3'
+
+volumes:
+  intranetauth_local_postgres_data: {}
+  intranetauth_local_postgres_data_backups: {}
+  node_modules:
+  hr_destinations:
+  hr_archive:
+  hr_tmp:
+
+
+services:
+  # dev:
+  #   container_name: intra-front
+  #   build:
+  #     context: ./front/.
+  #     dockerfile: ../compose/local/next/Dockerfile
+  #     # network: host
+  #   volumes:
+  #     - ./front/src:/app/src
+  #     - ./front/public:/app/public
+  #   ports:
+  #     - '3000:3000'
+  #   networks:
+  #     - my_network
+  #   depends_on:
+  #     - django
+  #     - hrlocal
+  # intrafront:
+  #   build:
+  #     context: ./frontend/.
+  #     dockerfile: ../compose/local/react/Dockerfile
+  #   image: intranet_local_react
+  #   container_name: intranet_local_react
+  #   networks:
+  #     - my_network
+  #   platform: linux/x86_64
+  #   volumes:
+  #     - ./frontend/public:/app/public
+  #     - ./frontend/src:/app/src
+  #   ports:
+  #     - "3000:3000"
+  # djangofinance:
+  #   build:
+  #     context: ./backend/finance/intrafinance/.
+  #     dockerfile: ./compose/local/django/Dockerfile
+  #   image: intrafinance_local_django
+  #   container_name: intrafinance_local_django
+  #   networks:
+  #     - my_network
+  #   depends_on:
+  #     - postgres
+  #   volumes:
+  #     - ./backend/finance/intrafinance/.:/app:z
+  #   env_file:
+  #     - ./backend/finance/intrafinance/.envs/.local/.django
+  #     - ./backend/finance/intrafinance/.envs/.local/.postgres
+  #   ports:
+  #     - '8002:8002'
+  #   command: /start
+  django:
+    build:
+      context: ./backend/auth/intranetauth/.
+      dockerfile: ./compose/local/django/Dockerfile
+    image: intranetauth_local_django
+    container_name: intranetauth_local_django
+    networks:
+      - my_network
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/auth/intranetauth/.:/app:z
+    env_file:
+      - ./backend/auth/intranetauth/.envs/.local/.django
+      - ./backend/auth/intranetauth/.envs/.local/.postgres
+    ports:
+      - "8000:8000"
+    command: /start
+
+  hrlocal: &hrlocal
+    build:
+      context: ./backend/hr/.
+      dockerfile: ./compose/local/django/Dockerfile
+    image: hr_local_django
+    # user: 1001:137  
+    container_name: hr_local_django
+    depends_on:
+      - postgres
+      - redis
+      # - mailpit
+    volumes:
+      - ./backend/hr/.:/app
+      - hr_destinations:/app/destinations
+      - hr_archive:/app/archive
+      - hr_tmp:/app/tmp
+    env_file:
+      - ./backend/hr/.envs/.local/.django
+      - ./backend/hr/.envs/.local/.postgres
+    ports:
+      - '8010:8000'
+    networks:
+      - my_network
+    command: /start
+
+  editing: &editing
+    build:
+      context: ./backend/vanguard_editing/.
+      dockerfile: ./compose/local/django/Dockerfile
+    image: vanguard_editing_local_django
+    container_name: vanguard_editing_local_django
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend/vanguard_editing/.:/app
+    env_file:
+      - ./backend/vanguard_editing/.envs/.local/.django
+      - ./backend/vanguard_editing/.envs/.local/.postgres
+    ports:
+      - '8030:8000'
+    networks:
+      - my_network
+    command: /start
+
+  # celeryworker:
+  #   <<: *hrlocal
+  #   image: hr_local_celeryworker
+  #   container_name: hr_local_celeryworker
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #     - mailpit
+  #   ports: []
+  #   command: /start-celeryworker
+
+  # celerybeat:
+  #   <<: *hrlocal
+  #   image: hr_local_celerybeat
+  #   container_name: hr_local_celerybeat
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #     - mailpit
+  #   ports: []
+  #   command: /start-celerybeat
+
+  # flower:
+  #   <<: *hrlocal
+  #   image: hr_local_flower
+  #   container_name: hr_local_flower
+  #   ports:
+  #     - '5555:5555'
+  #   command: /start-flower
+
+  postgres:
+    build:
+      context: ./backend/auth/intranetauth/.
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: intranetauth_production_postgres
+    container_name: intranetauth_local_postgres
+    volumes:
+      - intranetauth_local_postgres_data:/var/lib/postgresql/data
+      - intranetauth_local_postgres_data_backups:/backups
+    env_file:
+      - ./backend/auth/intranetauth/.envs/.local/.postgres
+    networks:
+      - my_network
+
+  # mailpit:
+  #   image: docker.io/axllent/mailpit:latest
+  #   container_name: hr_local_mailpit
+  #   ports:
+  #     - "8025:8025"
+  #   networks:
+  #     - my_network
+
+  redis:
+    image: docker.io/redis:6
+    container_name: hr_local_redis
+    networks:
+      - my_network
+  
+  cerbos:
+    # image: aemr3/cerbos-alpine
+    container_name: hr_local_cerbos
+    build:
+      context: ./cerbos/.
+      dockerfile: ./Dockerfile
+    ports:
+      - "3592:3591"
+      - "3593:3593"
+    networks:
+      - my_network
+    volumes:
+      - ./cerbos/policies:/policies
+      - ./cerbos/audit:/audit
+
+networks:
+  my_network:

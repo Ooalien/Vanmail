@@ -1,0 +1,79 @@
+textarea {
+    min-height: 400px;
+}
+
+/* Attachment styles */
+.email-attachments {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.attachments-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.attachment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.attachment-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attachment-name {
+    font-size: 0.9em;
+    color: #495057;
+}
+
+.download-btn {
+    padding: 4px 8px;
+    font-size: 0.8em;
+}
+
+.download-btn i {
+    margin-right: 4px;
+}
+
+/* Preview styles for compose */
+#compose-attachments-preview {
+    margin-top: 10px;
+}
+
+.preview-attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.preview-attachment-item i {
+    color: #6c757d;
+}
+
+.remove-preview {
+    margin-left: auto;
+    cursor: pointer;
+    color: #dc3545;
+    padding: 0 5px;
+}

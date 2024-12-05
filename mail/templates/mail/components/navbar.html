@@ -1,0 +1,32 @@
+{% load static %}
+
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <img src="{% static 'mail/logo.png' %}" alt="Logo" class="navbar-logo">
+      <span class="navbar-title">Vanguard Mail</span>
+    </div>
+    
+    <div class="navbar-menu">
+      <button class="nav-btn {% if active == 'inbox' %}active{% endif %}" id="inbox">
+        <i class="fas fa-inbox"></i> Inbox
+      </button>
+      <button class="nav-btn {% if active == 'sent' %}active{% endif %}" id="sent">
+        <i class="fas fa-paper-plane"></i> Sent
+      </button>
+      <button class="nav-btn {% if active == 'archived' %}active{% endif %}" id="archived">
+        <i class="fas fa-archive"></i> Archived
+      </button>
+      <button class="nav-btn compose-btn" id="compose">
+        <i class="fas fa-pen"></i> Compose
+      </button>
+    </div>
+
+    <div class="navbar-user">
+      <span class="user-email">{{ request.user.email }}</span>
+      <a href="{% url 'logout' %}" class="btn btn-outline">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </div>
+</nav> 

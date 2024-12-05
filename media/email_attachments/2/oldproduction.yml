@@ -1,0 +1,111 @@
+version: '3'
+
+volumes:
+  production_postgres_data: {}
+  production_postgres_data_backups: {}
+  production_traefik: {}
+  production_vantranet_media: {}
+
+services:
+ 
+  main-front:
+    container_name: main-front
+    build:
+      context: ./front/main-front/.
+      dockerfile: ../compose/production/main-front/Dockerfile
+      # network: host
+    volumes:
+      # # - ./front:/opt/app
+      - /opt/app/node_modules
+      - /opt/app/.next
+    networks:
+      - intra_network
+    ports:
+      - '3000:3000'
+
+  documents-front:
+    container_name: documents-front
+    build:
+      context: ./front/documents-front/.
+      dockerfile: ../compose/production/documents-front/Dockerfile
+    volumes:
+      - /opt/app/node_modules
+      - /opt/app/.next
+    ports:
+      - '3001:3001'
+
+  intraauth:
+    build:
+      context: ./backend/auth/intranetauth/.
+      dockerfile: ./compose/production/django/Dockerfile
+    image: vantranet_production_django
+    #platform: linux/x86_64
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - intra_network
+    env_file:
+      - ./backend/auth/intranetauth/.envs/.production/.django
+      - ./backend/auth/intranetauth/.envs/.production/.postgres
+    command: /start
+
+
+  postgres:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: vantranet_production_postgres
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data:Z
+      - production_postgres_data_backups:/backups:z
+    networks:
+      - intra_network
+    env_file:
+      - ./backend/auth/intranetauth/.envs/.production/.postgres
+
+  traefik:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./compose/production/traefik/Dockerfile
+    image: production_traefik
+    networks:
+      - intra_network
+    depends_on:
+      - main-front
+      - documents-front
+      - intraauth
+    volumes:
+      - ./compose/production/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - production_traefik:/etc/traefik/acme:z
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--log.level=DEBUG"
+
+
+  redis:
+    image: redis:6
+    networks:
+      - intra_network
+
+  # nginx:
+  #     build:
+  #       context: .
+  #       dockerfile: ./compose/production/nginx/Dockerfile
+  #     image: vanguard_nginx
+  #     depends_on:
+  #       - vanguard
+  #     volumes:
+  #       - production_vantranet_media:/usr/share/nginx/media:ro
+
+networks:
+  intra_network:

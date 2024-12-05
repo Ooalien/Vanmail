@@ -1,0 +1,54 @@
+{% extends "mail/base/base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="email-app">
+        <div id="emails-view" class="email-list">
+            <!-- Emails will be loaded here -->
+        </div>
+
+        <div id="single-email" class="email-detail" style="display: none;">
+            <!-- Single email view -->
+        </div>
+
+        <div id="compose-view" class="compose-container" style="display: none;">
+            <div class="compose-header">
+                <h3 class="compose-title">New Email</h3>
+            </div>
+            
+            <form id="compose-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">From:</label>
+                    <input disabled class="form-control" value="{{ request.user.email }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">To:</label>
+                    <input id="compose-recipients" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Subject:</label>
+                    <input class="form-control" id="compose-subject" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Message:</label>
+                    <textarea class="form-control compose-body" id="compose-body" required></textarea>
+                </div>
+                
+                <div class="attachment-section">
+                    <label class="form-label">
+                        <i class="fas fa-paperclip"></i> Attachments
+                    </label>
+                    <input type="file" class="form-control-file" id="compose-attachments" multiple>
+                    <div id="compose-attachments-preview" class="attachment-preview"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send Email
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

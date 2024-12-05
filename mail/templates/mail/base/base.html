@@ -1,0 +1,33 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}Mail{% endblock %}</title>
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="{% static 'mail/css/base.css' %}">
+        <link rel="stylesheet" href="{% static 'mail/css/components/email.css' %}">
+        <link rel="stylesheet" href="{% static 'mail/css/components/forms.css' %}">
+        <link rel="stylesheet" href="{% static 'mail/css/components/navbar.css' %}">
+        <link rel="stylesheet" href="{% static 'mail/css/components/compose.css' %}">
+        <link rel="stylesheet" href="{% static 'mail/styles.css' %}">
+        {% block extra_css %}{% endblock %}
+    </head>
+    <body>
+        {% include 'mail/components/navbar.html' %}
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <!-- Load the old script for compatibility -->
+        <script src="{% static 'mail/inbox.js' %}"></script>
+        
+        <!-- Load the new modular scripts -->
+        <script type="module" src="{% static 'mail/js/app.js' %}"></script>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html> 

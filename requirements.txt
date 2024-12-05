@@ -1,0 +1,6 @@
+Django
+gunicorn
+django-heroku
+django-storages
+aiosmtpd
+aioimaplib==1.0.1

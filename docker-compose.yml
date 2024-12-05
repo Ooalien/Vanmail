@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"  # Django server
+      - "1025:1025"  # SMTP server
+      - "1143:1143"  # IMAP server
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+      - DOCKER_ENV=1
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
