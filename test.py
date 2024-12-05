@@ -1,69 +1,83 @@
-import os
-import django
-import smtplib
-from email.mime.multipart import MIMEMultipart
+import imaplib
+import email
+import logging
 from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+import time
+from email import policy
 
-# Setup Django environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project3.settings')
-django.setup()
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-from mail.models import User
-
-def send_test_email(sender_email, recipient_emails, subject, body, attachment_paths=None):
+def test_imap_connection():
     try:
-        # Verify sender exists
-        try:
-            sender = User.objects.get(email=sender_email)
-        except User.DoesNotExist:
-            print(f"Error: Sender {sender_email} not found")
-            return False
+        # IMAP server settings
+        IMAP_HOST = 'localhost'
+        IMAP_PORT = 1143
+        USERNAME = 'omar-floki@allo.malo'  # Replace with a valid user email
+        PASSWORD = 'aliali'      # Replace with the user's password
 
-        # Verify recipients exist
-        for recipient_email in recipient_emails:
-            if not User.objects.filter(email=recipient_email).exists():
-                print(f"Error: Recipient {recipient_email} not found")
-                return False
+        # Connect to IMAP server
+        logger.info(f"Connecting to IMAP server at {IMAP_HOST}:{IMAP_PORT}")
+        imap = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
+        
+        # Test CAPABILITY
+        logger.info("Testing CAPABILITY command")
+        typ, capabilities = imap.capability()
+        logger.info(f"Server capabilities: {capabilities}")
+        
+        # Login
+        logger.info(f"Attempting to login as {USERNAME}")
+        imap.login(USERNAME, PASSWORD)
+        logger.info("Login successful")
 
-        # Create message
-        msg = MIMEMultipart()
-        msg['From'] = sender_email
-        msg['To'] = ', '.join(recipient_emails)
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
+        # Test NOOP
+        logger.info("Testing NOOP command")
+        typ, data = imap.noop()
+        logger.info(f"NOOP response: {typ}")
 
-        # Add attachments if any
-        if attachment_paths:
-            for file_path in attachment_paths:
-                if not os.path.exists(file_path):
-                    print(f"Warning: Attachment {file_path} not found, skipping")
-                    continue
-                    
-                with open(file_path, 'rb') as f:
-                    filename = os.path.basename(file_path)
-                    part = MIMEApplication(f.read(), Name=filename)
-                    part['Content-Disposition'] = f'attachment; filename="{filename}"'
-                    msg.attach(part)
+        # Select INBOX
+        logger.info("Selecting INBOX")
+        typ, data = imap.select('INBOX')
+        if typ == 'OK':
+            logger.info(f"INBOX contains {data[0].decode()} messages")
 
-        # Send via local SMTP
-        with smtplib.SMTP('vanmail', 1025) as smtp:
-            smtp.send_message(msg)
-            print("Email sent successfully!")
-            return True
+            # Search for all messages
+            logger.info("Searching for messages")
+            typ, messages = imap.search(None, 'UNSEEN')
+            
+            if messages[0]:
+                for num in messages[0].split():
+                    logger.info(f"Fetching message {num.decode()}")
+                    typ, msg_data = imap.fetch(num, '(RFC822)')
+                    if typ == 'OK':
+                        email_body = msg_data[0][1]
+                        email_message = email.message_from_bytes(email_body, policy=policy.default)
+                        logger.info(f"From: {email_message['from']}")
+                        logger.info(f"Subject: {email_message['subject']}")
+                        logger.info(f"Date: {email_message['date']}")
+                        
+                        # Print message content
+                        if email_message.is_multipart():
+                            for part in email_message.walk():
+                                if part.get_content_type() == "text/plain":
+                                    logger.info(f"Content: {part.get_payload(decode=True).decode()}")
+                        else:
+                            logger.info(f"Content: {email_message.get_payload(decode=True).decode()}")
+            else:
+                logger.info("No messages in INBOX")
+        
+        # Logout
+        logger.info("Logging out")
+        imap.logout()
+        logger.info("IMAP test completed successfully")
 
     except Exception as e:
-        print(f"Error sending email: {str(e)}")
-        return False
+        logger.error(f"Error during IMAP test: {str(e)}")
+        raise
 
 if __name__ == "__main__":
-    # Example usage
-    sender = "alibayar750@gmail.com"  # Must be a registered user
-    recipients = ["ali.bayar@um6p.ma"]  # Must be registered users
-    subject = "Test Email with Attachment"
-    body = "This is a test email sent from the command line script."
-    attachments = [
-        "./start.sh",
-    ]
-
-    send_test_email(sender, recipients, subject, body, attachments)
+    # Wait a bit for the server to start up
+    time.sleep(2)
+    test_imap_connection()
